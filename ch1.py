@@ -53,7 +53,7 @@ def find_unbroken_corridors(matrix, algorithm="BT"):
         return (northern_corridor, eastern_corridor)
 
     if algorithm == "SW":
-        norhern_corridor =m[0]
+        norhern_corridor = m[0]
         return (norhern_corridor)
 
 
@@ -116,9 +116,19 @@ m = get_matrix(x=40, y=30)
 # it also has an unbroken passage, although not two as BT
 
 
-def get_maze_matrix(x=10, y=10):
-    x = x + (x-1)
-    y = y + (y-1)
+def CellIndexer(x):
+    step = x * 3 + 1
+    cellIndex = [step - i for i in range(x**2)]
+
+    return cellIndex
+
+
+CellIndexer(x=4)
+
+
+def get_maze_matrix(x=10, y=10, labelled=False):
+    x = x * 3
+    y = y * 3
     cells = list(range(x * y))
     matrix = list()
     for i in range(x):
@@ -130,14 +140,17 @@ def get_maze_matrix(x=10, y=10):
 
     return matrix
 
+
 def is_cell(i):
     return i % 2 == 1
+
 
 def is_wall(i):
     return i % 2 == 0
 
 
-m = get_maze_matrix(10, 10)
+m = get_maze_matrix(4, 4)
+
 
 def in_cell(m, i):
     if i in find_boundaries(m):
@@ -149,3 +162,54 @@ def in_cell(m, i):
     return incell
 
 
+in_cell(m, 319)
+
+
+class Cell:
+    def __init__(self, indicator):
+        self.indicator = indicator
+        self.NW_corner = "╔"
+        self.SW_corner = "╚"
+        self.NE_corner = "╗\n"
+        self.SE_corner = "╝\n"
+        self.N_wall = "═══"
+        self.S_wall = "═══"
+        self.E_wall = "║\n"
+        self.W_wall = "║"
+        self.internal = "   "
+        self.N_opening = "╛ ╘"
+        self.S_opening = "╕ ╒"
+        self.W_opening = " "
+        self.E_opening = " \n"
+
+    def draw(self):
+        # TODO
+
+        # def draw(self):
+        #     self.upper_section = self.NW_corner + self.N_wall + self.NE_corner
+        #     self.middle_section = self.W_wall + self.internal + self.E_wall
+        #     self.lower_section = self.SW_corner + self.S_wall + self.SE_corner
+        #     self.cell = self.upper_section + self.middle_section + self.lower_section
+        #     self.cell = self.cell + self.cell
+        #     print(self.cell)
+
+
+c = Cell(10)
+c.draw()
+
+
+def get_cell_index():
+    return [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+
+
+def get_cell_component():
+    return [['NW_corner', 'N_wall', 'NE_corner'], [
+        'W_wall', 'internal', 'E_wall'], ['SW_corner', 'S_wall', 'SE_corner']]
+
+
+class Element:
+
+    def __init__(self, indicator, element, uni):
+        self.indicator = indicator
+        self.element = element
+        self.uni = uni
