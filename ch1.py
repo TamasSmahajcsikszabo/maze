@@ -28,15 +28,14 @@ import numpy.random as rand
 def get_matrix(x=10, y=10):
     cells = list(range(x * y))
     matrix = list()
-    for i in range(x):
+    for i in range(y):
         row = list()
-        index = cells[i * y: y * i + y]
+        index = cells[i * x: x * i + x]
         for c in index:
             row.append(cells[c])
         matrix.append(row)
 
     return matrix
-
 
 def get_corners(m):
     NW = min(m[0])
