@@ -198,6 +198,54 @@ def collapse_to_list(tupl):
     [result.extend(i) for i in tupl]
     return result
 
+def generate_maze(selfObject):
+    # Binary Tree algorithm
+        if selfObject.algorithm == "BT":
+            for row in range(len(selfObject.matrix)-1, -1, -1):
+                for c in range(selfObject.x):
+                    selected_indicator = selfObject.matrix[row][c]
+                    for cell in selfObject.cells:
+                        if cell.indicator == selected_indicator:
+                            if cell.indicator not in collapse_to_list(selfObject.unbroken_corridors):
+                                v = rand.randint(0, 2)
+                                if v == 0:
+                                    other_cell = [
+                                        cell for cell in selfObject.cells
+                                        if cell.indicator == selfObject.matrix
+                                        [row - 1][c]][0]
+                                    open_wall("N", [other_cell, cell])
+                                elif v == 1:
+                                    other_cell = [
+                                        cell for cell in selfObject.cells
+                                        if cell.indicator == selfObject.matrix[row]
+                                        [c + 1]][0]
+                                    open_wall("E", [cell, other_cell])
+                            elif cell.indicator in selfObject.unbroken_corridors[0] and cell.indicator not in selfObject.corners:
+                                other_cell = [
+                                    cell for cell in selfObject.cells
+                                    if cell.indicator == selfObject.matrix[row]
+                                    [c + 1]][0]
+                                open_wall("E", [cell, other_cell])
+                            elif cell.indicator in selfObject.unbroken_corridors[1] and cell.indicator not in selfObject.corners:
+                                other_cell = [
+                                    cell for cell in selfObject.cells
+                                    if cell.indicator == selfObject.matrix
+                                    [row - 1][c]][0]
+                                open_wall("N", [other_cell, cell])
+                            elif cell.indicator == [i for i in selfObject.corners][0]:
+                                other_cell = [
+                                    cell for cell in selfObject.cells
+                                    if cell.indicator == selfObject.matrix[row]
+                                    [c + 1]][0]
+                                open_wall("E", [cell, other_cell])
+                            elif cell.indicator == [i for i in selfObject.corners][3]:
+                                other_cell = [
+                                    cell for cell in selfObject.cells
+                                    if cell.indicator == selfObject.matrix
+                                    [row - 1][c]][0]
+                                open_wall("N", [other_cell, cell])
+
+
 class Maze(Component):
     def __init__(self, x, y, algorithm="BT",  **kargs):
         Component.__init__(self, **kargs)
@@ -218,38 +266,7 @@ class Maze(Component):
         self.generate()
 
     def generate(self):
-        if self.algorithm == "BT":
-            for row in range(len(self.matrix)-1, -1, -1):
-                for c in range(self.x):
-                    selected_indicator = self.matrix[row][c]
-                    for cell in self.cells:
-                        if cell.indicator == selected_indicator:
-                            if cell.indicator not in collapse_to_list(self.unbroken_corridors):
-                                v = rand.randint(0, 2)
-                                if v == 0:
-                                    other_cell = [
-                                        cell for cell in self.cells
-                                        if cell.indicator == self.matrix
-                                        [row - 1][c]][0]
-                                    open_wall("N", [other_cell, cell])
-                                elif v == 1:
-                                    other_cell = [
-                                        cell for cell in self.cells
-                                        if cell.indicator == self.matrix[row]
-                                        [c + 1]][0]
-                                    open_wall("E", [cell, other_cell])
-                            elif cell.indicator in self.unbroken_corridors[0] and cell.indicator not in self.corners:
-                                other_cell = [
-                                    cell for cell in self.cells
-                                    if cell.indicator == self.matrix[row]
-                                    [c + 1]][0]
-                                open_wall("E", [cell, other_cell])
-                            elif cell.indicator in self.unbroken_corridors[1] and cell.indicator not in self.corners:
-                                other_cell = [
-                                    cell for cell in self.cells
-                                    if cell.indicator == self.matrix
-                                    [row - 1][c]][0]
-                                open_wall("N", [other_cell, cell])
+        generate_maze(self)
 
 
 
@@ -265,9 +282,10 @@ class Maze(Component):
                 maze_string = maze_string + "\n"
         return maze_string
 
-test_maze = Maze(x=10, y=10, indicator=1, name="test_maze")
+test_maze = Maze(x=14, y=10, indicator=1, name="test_maze")
 matrix = get_matrix()
 get_corners(matrix)
 test_maze.matrix
 test_maze.unbroken_corridors[0]
+test_maze.corners
 test_maze.boundaries
