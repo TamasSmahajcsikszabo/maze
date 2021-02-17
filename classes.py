@@ -173,12 +173,12 @@ def find_unbroken_corridors(matrix, algorithm="BT"):
         eastern_corridor = [max(r) for r in matrix]
         return (northern_corridor, eastern_corridor)
 
-    if algorithm == "SW":
+    if algorithm == "sidewinder":
         norhern_corridor = matrix[0]
         return norhern_corridor
 
 
-def find_boundaries(matrix, algorithm="BT"):
+def find_boundaries(matrix,combined=True, algorithm="BT"):
     if algorithm == "BT":
         corners = get_corners(matrix)
         northern_corridor = [i for i in matrix[0] if i not in corners]
@@ -190,7 +190,10 @@ def find_boundaries(matrix, algorithm="BT"):
         [horizontal.extend(l) for l in (northern_corridor, southern_corridor)]
         vertical = []
         [vertical.extend(l) for l in (eastern_corridor, western_corridor)]
-        return (horizontal, vertical)
+        if combined:
+            return (horizontal, vertical)
+        else:
+            return [northern_corridor, southern_corridor, eastern_corridor, western_corridor]
 
 
 def collapse_to_list(tupl):
@@ -198,52 +201,101 @@ def collapse_to_list(tupl):
     [result.extend(i) for i in tupl]
     return result
 
+
 def generate_maze(selfObject):
     # Binary Tree algorithm
-        if selfObject.algorithm == "BT":
-            for row in range(len(selfObject.matrix)-1, -1, -1):
-                for c in range(selfObject.x):
-                    selected_indicator = selfObject.matrix[row][c]
-                    for cell in selfObject.cells:
-                        if cell.indicator == selected_indicator:
-                            if cell.indicator not in collapse_to_list(selfObject.unbroken_corridors):
-                                v = rand.randint(0, 2)
-                                if v == 0:
-                                    other_cell = [
-                                        cell for cell in selfObject.cells
-                                        if cell.indicator == selfObject.matrix
-                                        [row - 1][c]][0]
-                                    open_wall("N", [other_cell, cell])
-                                elif v == 1:
-                                    other_cell = [
-                                        cell for cell in selfObject.cells
-                                        if cell.indicator == selfObject.matrix[row]
-                                        [c + 1]][0]
-                                    open_wall("E", [cell, other_cell])
-                            elif cell.indicator in selfObject.unbroken_corridors[0] and cell.indicator not in selfObject.corners:
-                                other_cell = [
-                                    cell for cell in selfObject.cells
-                                    if cell.indicator == selfObject.matrix[row]
-                                    [c + 1]][0]
-                                open_wall("E", [cell, other_cell])
-                            elif cell.indicator in selfObject.unbroken_corridors[1] and cell.indicator not in selfObject.corners:
+    if selfObject.algorithm == "BT":
+        for row in range(len(selfObject.matrix)-1, -1, -1):
+            for c in range(selfObject.x):
+                selected_indicator = selfObject.matrix[row][c]
+                for cell in selfObject.cells:
+                    if cell.indicator == selected_indicator:
+                        if cell.indicator not in collapse_to_list(
+                                selfObject.unbroken_corridors):
+                            v = rand.randint(0, 2)
+                            if v == 0:
                                 other_cell = [
                                     cell for cell in selfObject.cells
                                     if cell.indicator == selfObject.matrix
                                     [row - 1][c]][0]
                                 open_wall("N", [other_cell, cell])
-                            elif cell.indicator == [i for i in selfObject.corners][0]:
+                            elif v == 1:
                                 other_cell = [
                                     cell for cell in selfObject.cells
                                     if cell.indicator == selfObject.matrix[row]
                                     [c + 1]][0]
                                 open_wall("E", [cell, other_cell])
-                            elif cell.indicator == [i for i in selfObject.corners][3]:
+                        elif cell.indicator in selfObject.unbroken_corridors[0] and cell.indicator not in selfObject.corners:
+                            other_cell = [
+                                cell for cell in selfObject.cells
+                                if cell.indicator == selfObject.matrix[row]
+                                [c + 1]][0]
+                            open_wall("E", [cell, other_cell])
+                        elif cell.indicator in selfObject.unbroken_corridors[1] and cell.indicator not in selfObject.corners:
+                            other_cell = [
+                                cell for cell in selfObject.cells
+                                if cell.indicator == selfObject.matrix
+                                [row - 1][c]][0]
+                            open_wall("N", [other_cell, cell])
+                        elif cell.indicator == [i for i in selfObject.corners][0]:
+                            other_cell = [
+                                cell for cell in selfObject.cells
+                                if cell.indicator == selfObject.matrix[row]
+                                [c + 1]][0]
+                            open_wall("E", [cell, other_cell])
+                        elif cell.indicator == [i for i in selfObject.corners][3]:
+                            other_cell = [
+                                cell for cell in selfObject.cells
+                                if cell.indicator == selfObject.matrix
+                                [row - 1][c]][0]
+                            open_wall("N", [other_cell, cell])
+
+    elif selfObject.algorithm == "sidewinder":
+        container = []
+        for row in range(len(selfObject.matrix)-1, -1, -1):
+            for c in range(selfObject.x):
+                selected_indicator = selfObject.matrix[row][c]
+                for cell in selfObject.cells:
+                    if cell.indicator == selected_indicator:
+                        if cell.indicator in find_boundaries(selfObject.matrix,combined=False)[2]:
+                            other_cell = [
+                                cell for cell in selfObject.cells
+                                if cell.indicator == selfObject.matrix
+                                [row - 1][c]][0]
+                            open_wall("N", [other_cell, cell])
+                        elif cell.indicator not in collapse_to_list(find_unbroken_corridors(
+                                selfObject.matrix)):
+                            v = rand.randint(0, 2)
+                            if v == 0:
+                                other_cell = [
+                                    cell for cell in selfObject.cells
+                                    if cell.indicator == selfObject.matrix[row]
+                                    [c + 1]][0]
+                                open_wall("E", [cell, other_cell])
+                                container.append(cell)
+                            elif v == 1:
+                                container.append(cell)
+                                selection = rand.randint(0, len(container))
+                                selected_cell = container[selection]
+                                container = []
+                                for r in range(selfObject.y):
+                                    if selected_cell.indicator in selfObject.matrix[r]:
+                                        selected_cell_position = [
+                                            i for i in range(selfObject.x)
+                                            if selected_cell.indicator
+                                            == selfObject.matrix[r][i]][0]
+                                        print(selected_cell_position)
                                 other_cell = [
                                     cell for cell in selfObject.cells
                                     if cell.indicator == selfObject.matrix
-                                    [row - 1][c]][0]
-                                open_wall("N", [other_cell, cell])
+                                    [row - 1][selected_cell_position]][0]
+                                open_wall("N", [other_cell, selected_cell])
+                        elif cell.indicator in find_unbroken_corridors(selfObject.matrix)[0] and cell.indicator not in [selfObject.corners[i] for i in [1]]:
+                            other_cell = [
+                                cell for cell in selfObject.cells
+                                if cell.indicator == selfObject.matrix[row]
+                                [c + 1]][0]
+                            open_wall("E", [cell, other_cell])
 
 
 class Maze(Component):
@@ -268,8 +320,6 @@ class Maze(Component):
     def generate(self):
         generate_maze(self)
 
-
-
     def __repr__(self):
         maze_string = ""
         for row in self.matrix:
@@ -282,6 +332,7 @@ class Maze(Component):
                 maze_string = maze_string + "\n"
         return maze_string
 
+
 test_maze = Maze(x=14, y=10, indicator=1, name="test_maze")
 matrix = get_matrix()
 get_corners(matrix)
@@ -289,3 +340,9 @@ test_maze.matrix
 test_maze.unbroken_corridors[0]
 test_maze.corners
 test_maze.boundaries
+test_maze2 = Maze(
+    x=14,
+    y=10,
+    algorithm="sidewinder",
+    indicator=2,
+    name="test2")
