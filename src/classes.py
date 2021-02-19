@@ -332,6 +332,7 @@ class Maze(Component):
         return maze_string
 
 
+#quick checks
 test_maze = Maze(x=14, y=10, indicator=1, name="test_maze")
 matrix = get_matrix()
 get_corners(matrix)
@@ -346,7 +347,7 @@ test_maze2 = Maze(
     indicator=2,
     name="test2")
 
-
+#TODO
 # free isolated cells
 # change cell size
 # add items
