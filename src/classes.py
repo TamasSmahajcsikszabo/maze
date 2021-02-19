@@ -257,7 +257,7 @@ def generate_maze(selfObject):
                 selected_indicator = selfObject.matrix[row][c]
                 for cell in selfObject.cells:
                     if cell.indicator == selected_indicator:
-                        if cell.indicator in find_boundaries(selfObject.matrix,combined=False)[2]:
+                        if cell.indicator in find_boundaries(selfObject.matrix,combined=False)[2] or cell.indicator == selfObject.corners[3]:
                             other_cell = [
                                 cell for cell in selfObject.cells
                                 if cell.indicator == selfObject.matrix
@@ -284,7 +284,6 @@ def generate_maze(selfObject):
                                             i for i in range(selfObject.x)
                                             if selected_cell.indicator
                                             == selfObject.matrix[r][i]][0]
-                                        print(selected_cell_position)
                                 other_cell = [
                                     cell for cell in selfObject.cells
                                     if cell.indicator == selfObject.matrix
@@ -346,3 +345,9 @@ test_maze2 = Maze(
     algorithm="sidewinder",
     indicator=2,
     name="test2")
+
+
+# free isolated cells
+# change cell size
+# add items
+# framerate
