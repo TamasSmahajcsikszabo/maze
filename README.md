@@ -1,1 +1,1 @@
-mazes repo
+Have fun with some mazes!
