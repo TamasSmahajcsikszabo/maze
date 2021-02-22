@@ -1,0 +1,8 @@
+
+# TODO
+# free isolated cells
+# change cell size - DONE
+# __repr__ change for Maze with cellsize > 3
+# adjust open_wall with wall_length % ==0 cases
+# spawn items
+# framerate
