@@ -1,19 +1,5 @@
 import numpy.random as rand
 
-
-def get_matrix(x=10, y=10):
-    cells = list(range(x * y))
-    matrix = list()
-    for i in range(x):
-        row = list()
-        index = cells[i * y: y * i + y]
-        for c in index:
-            row.append(cells[c])
-        matrix.append(row)
-
-    return matrix
-
-
 class Component:
     def __init__(self, indicator, name, body=""):
         self.indicator = indicator
@@ -167,6 +153,22 @@ def open_wall(orientation, cells):
             if orientation == "E":
                 getattr(cells[0], "E_wall"+middle).body = " "
                 getattr(cells[1], "W_wall"+middle).body = " "
+
+        elif wall_length % 2 == 0:
+            middle = [str(i) for i in get_middle_value(wall_length)]
+
+            if orientation == "N":
+
+                getattr(cells[0], "S_wall"+middle[0]).body = "╕  "
+                getattr(cells[0], "S_wall"+middle[1]).body = "  ╒"
+                getattr(cells[1], "N_wall"+middle[0]).body = "╛  "
+                getattr(cells[1], "N_wall"+middle[1]).body = "  ╘"
+
+            if orientation == "E":
+                getattr(cells[0], "E_wall"+middle[0]).body = " "
+                getattr(cells[0], "E_wall"+middle[1]).body = " "
+                getattr(cells[1], "W_wall"+middle[0]).body = " "
+                getattr(cells[1], "W_wall"+middle[1]).body = " "
 
     else:
         pass
@@ -375,8 +377,10 @@ class Maze(Component):
 
 # quick checks
 test_maze = Maze(x=14, y=10, cellsize=3, indicator=1, name="test_maze")
+test_maze = Maze(x=4, y=4, cellsize=8, indicator=1, name="test_maze")
+test_maze = Maze(x=4, y=4, cellsize=8, indicator=1, name="test_maze", algorithm="sidewinder")
 test_maze2 = Maze(
-    x=14,
+    x=10,
     y=10,
     cellsize=3,
     algorithm="sidewinder",
