@@ -1,5 +1,6 @@
 import numpy.random as rand
 
+
 class Component:
     def __init__(self, indicator, name, body=""):
         self.indicator = indicator
@@ -89,6 +90,7 @@ def find_boundaries(matrix, combined=True, algorithm="BT"):
             return [northern_corridor, southern_corridor,
                     eastern_corridor, western_corridor]
 
+
 def get_base_components(size=3):
     cellmatrix = get_matrix(size, size)
     corners = [i for i in get_corners(cellmatrix)]
@@ -127,6 +129,7 @@ def get_base_components(size=3):
 
     return components
 
+
 def get_middle_value(x):
     if x % 2 == 1:
         for i in range(x):
@@ -135,8 +138,9 @@ def get_middle_value(x):
             if len(first) == len(second):
                 return i
     else:
-        result  = get_middle_value(x-1)
+        result = get_middle_value(x-1)
         return [result, result+1]
+
 
 def open_wall(orientation, cells):
     # first cell is either northern or western
@@ -172,6 +176,7 @@ def open_wall(orientation, cells):
 
     else:
         pass
+
 
 class Cell(Component):
     def __init__(self, size=3, **kargs):
@@ -209,7 +214,8 @@ class Cell(Component):
 
     def place(self, Item, room_location=0):
         attrname = "room"+str(room_location)
-        index = [i for i in range(len(self.components)) if self.components[i].name == attrname][0]
+        index = [i for i in range(len(self.components))
+                 if self.components[i].name == attrname][0]
         original_indicator = self.components[index].indicator
         self.components[index] = Item
         self.components[index].name = attrname
@@ -229,6 +235,7 @@ class Cell(Component):
 
     def __getitem__(self, section):
         return getattr(self, section)
+
 
 def merge_objects(section):
     string = ""
@@ -347,11 +354,12 @@ def generate_maze(selfObject):
                                 [c + 1]][0]
                             open_wall("E", [cell, other_cell])
 
+
 class Item(Component):
     def __init__(self, itemtype="chest",  **kargs):
         Component.__init__(self, **kargs)
         self.itemtype = itemtype
-        self.condition = 100 # numeric value with max 100
+        self.condition = 100  # numeric value with max 100
         self.open = "closed"
 
         if itemtype == "chest":
@@ -372,8 +380,10 @@ class Item(Component):
     def __repr__(self):
         return self.body
 
+
 def spawn_items(Cell):
     # spawns items
+
 
 class Maze(Component):
     def __init__(self, x, y, cellsize=4, algorithm="BT",  **kargs):
@@ -383,7 +393,7 @@ class Maze(Component):
         self.cellsize = cellsize
         self.matrix = get_matrix(x, y)
         self.cells = [
-            Cell(indicator=i, size = self.cellsize, name="")
+            Cell(indicator=i, size=self.cellsize, name="")
             for i in [row[i] for row in self.matrix for i in range(
                          len(row))]]
         self.algorithm = algorithm
@@ -401,7 +411,9 @@ class Maze(Component):
     def __repr__(self):
         maze_string = ""
         for row in self.matrix:
-            for section in ['section_'+str(max(m)+1) for m in get_matrix(x=self.cellsize, y=self.cellsize)]:
+            for section in [
+                'section_' + str(max(m) + 1)
+                    for m in get_matrix(x=self.cellsize, y=self.cellsize)]:
                 for i in row:
                     for selected_cell in self.cells:
                         if selected_cell.indicator == i:
@@ -414,7 +426,13 @@ class Maze(Component):
 # quick checks
 test_maze = Maze(x=14, y=10, cellsize=3, indicator=1, name="test_maze")
 test_maze = Maze(x=4, y=4, cellsize=8, indicator=1, name="test_maze")
-test_maze = Maze(x=4, y=4, cellsize=8, indicator=1, name="test_maze", algorithm="sidewinder")
+test_maze = Maze(
+    x=4,
+    y=4,
+    cellsize=8,
+    indicator=1,
+    name="test_maze",
+    algorithm="sidewinder")
 test_maze2 = Maze(
     x=10,
     y=10,
