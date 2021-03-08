@@ -190,6 +190,7 @@ class Cell(Component):
                     elif component[i].__class__.__name__ == "Wall":
                         setattr(self, component[i].name + str(i), component[i])
                         self.components.append(component[i])
+                    component[i].name = component[i].name+str(i)
             else:
                 setattr(self, component.name, component)
                 self.components.append(component)
@@ -205,6 +206,14 @@ class Cell(Component):
                     if y == component.indicator:
                         section.append(component)
             setattr(self, 'section_' + str(i), section)
+
+    def place(self, Item, room_location=0):
+        attrname = "room"+str(room_location)
+        index = [i for i in range(len(self.components)) if self.components[i].name == attrname][0]
+        original_indicator = self.components[index].indicator
+        self.components[index] = Item
+        self.components[index].name = attrname
+        self.components[index].indicator = original_indicator
 
     def __repr__(self):
         cellstring = ""
@@ -338,6 +347,33 @@ def generate_maze(selfObject):
                                 [c + 1]][0]
                             open_wall("E", [cell, other_cell])
 
+class Item(Component):
+    def __init__(self, itemtype="chest",  **kargs):
+        Component.__init__(self, **kargs)
+        self.itemtype = itemtype
+        self.condition = 100 # numeric value with max 100
+        self.open = "closed"
+
+        if itemtype == "chest":
+            self.body = " ▥ "
+
+    def damage(self, damage):
+        self.condition = self.condition - damage
+
+    def repair(self, repair):
+        self.condition = self.condition + repair
+
+    def open(self):
+        self.open = "open"
+
+    def close(self):
+        self.open = "closed"
+
+    def __repr__(self):
+        return self.body
+
+def spawn_items(Cell):
+    # spawns items
 
 class Maze(Component):
     def __init__(self, x, y, cellsize=4, algorithm="BT",  **kargs):
