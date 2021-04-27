@@ -366,10 +366,12 @@ class Item(Component):
             self.body = " ▥ "
 
     def damage(self, damage):
-        self.condition = self.condition - damage
+        if self.condition > 0:
+            self.condition = self.condition - damage
 
     def repair(self, repair):
-        self.condition = self.condition + repair
+        if self.condition < 100:
+            self.condition = self.condition + repair
 
     def open(self):
         self.open = "open"
@@ -384,6 +386,7 @@ class Item(Component):
 def spawn_items(Cell):
     # spawns items
 
+[c.condition for c in cell.components if c.name == "room1"]
 
 class Maze(Component):
     def __init__(self, x, y, cellsize=4, algorithm="BT",  **kargs):
