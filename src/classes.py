@@ -186,6 +186,7 @@ class Cell(Component):
         self.components = []
         self.matrix = get_matrix(x=size, y=size)
         self.wall_length = self.size - 2
+        self.occupied = False
         for component in components:
             if isinstance(component, list):
                 for i in range(len(component)):
@@ -199,13 +200,15 @@ class Cell(Component):
             else:
                 setattr(self, component.name, component)
                 self.components.append(component)
+        self.initiate_sections()
 
+    def initiate_sections(self):
         for i in [max(m)+1 for m in self.matrix]:
             section = []
-            if i == size:
+            if i == self.size:
                 r = range(i)
             else:
-                r = range(i-size, i)
+                r = range(i-self.size, i)
             for y in r:
                 for component in self.components:
                     if y == component.indicator:
@@ -220,6 +223,8 @@ class Cell(Component):
         self.components[index] = Item
         self.components[index].name = attrname
         self.components[index].indicator = original_indicator
+        self.initiate_sections()
+        self.occupied = True
 
     def __repr__(self):
         cellstring = ""
@@ -356,7 +361,7 @@ def generate_maze(selfObject):
 
 
 class Item(Component):
-    def __init__(self, itemtype="chest",  **kargs):
+    def __init__(self, custombody=None, itemtype="chest",  **kargs):
         Component.__init__(self, **kargs)
         self.itemtype = itemtype
         self.condition = 100  # numeric value with max 100
@@ -364,6 +369,8 @@ class Item(Component):
 
         if itemtype == "chest":
             self.body = " ▥ "
+        elif itemtype == "custom":
+            self.body = " " + str(custombody) +" "
 
     def damage(self, damage):
         if self.condition > 0:
@@ -383,10 +390,6 @@ class Item(Component):
         return self.body
 
 
-def spawn_items(Cell):
-    # spawns items
-
-[c.condition for c in cell.components if c.name == "room1"]
 
 class Maze(Component):
     def __init__(self, x, y, cellsize=4, algorithm="BT",  **kargs):
@@ -407,11 +410,12 @@ class Maze(Component):
             self.matrix, algorithm="BT")
         self.corners = get_corners(self.matrix)
         self.generate()
+        # self.map = self.draw_map()
 
     def generate(self):
         generate_maze(self)
 
-    def __repr__(self):
+    def draw_map(self):
         maze_string = ""
         for row in self.matrix:
             for section in [
@@ -423,29 +427,52 @@ class Maze(Component):
                             maze_string = maze_string + \
                                 merge_objects(selected_cell[section])
                 maze_string = maze_string + "\n"
-        return maze_string
+        self.map = maze_string
+        # return maze_string
+
+    def __repr__(self):
+        self.draw_map()
+        return self.map
+
+def random_spawn(maze, itemtype="chest", name="chest", custombody=None):
+    index = rand.randint(0, len(maze.cells))
+    if maze.cells[index].occupied is not True:
+        maze.cells[index].place(Item=Item(name=name, indicator=0, itemtype=itemtype, custombody=custombody))
+    return maze
 
 
+if __name__ == "__main__":
 # quick checks
-test_maze = Maze(x=14, y=10, cellsize=3, indicator=1, name="test_maze")
-test_maze = Maze(x=4, y=4, cellsize=8, indicator=1, name="test_maze")
-test_maze = Maze(
-    x=4,
-    y=4,
-    cellsize=8,
-    indicator=1,
-    name="test_maze",
-    algorithm="sidewinder")
-test_maze2 = Maze(
-    x=10,
-    y=10,
-    cellsize=3,
-    algorithm="sidewinder",
-    indicator=2,
-    name="test2")
+    test_maze = Maze(x=14, y=10, cellsize=3, indicator=1, name="test_maze")
+    test_maze = Maze(x=4, y=4, cellsize=8, indicator=1, name="test_maze")
+    test_maze = Maze(
+        x=4,
+        y=4,
+        cellsize=8,
+        indicator=1,
+        name="test_maze",
+        algorithm="sidewinder")
+    test_maze2 = Maze(
+        x=10,
+        y=10,
+        cellsize=3,
+        algorithm="sidewinder",
+        indicator=2,
+        name="test2")
+
+    for i in range(10):
+        random_spawn(test_maze, itemtype="custom", custombody=i, name="number")
+
+
+
+
+
+
+
+
 
 # TODO
 # free isolated cells
 # change cell size
-# add items
+# add ite
 # framerate
