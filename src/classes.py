@@ -1,4 +1,6 @@
 import numpy.random as rand
+import _thread
+import time
 
 
 class Component:
@@ -42,7 +44,6 @@ class Wall(Component):
 
 
 class Room(Component):
-
     def __init__(self, **kargs):
         Component.__init__(self, **kargs)
         self.body = "   "
@@ -200,9 +201,9 @@ class Cell(Component):
             else:
                 setattr(self, component.name, component)
                 self.components.append(component)
-        self.initiate_sections()
+        self.compute_sections()
 
-    def initiate_sections(self):
+    def compute_sections(self):
         for i in [max(m)+1 for m in self.matrix]:
             section = []
             if i == self.size:
@@ -223,7 +224,8 @@ class Cell(Component):
         self.components[index] = Item
         self.components[index].name = attrname
         self.components[index].indicator = original_indicator
-        self.initiate_sections()
+        self.compute_sections()
+        # TODO: self.Room.body = Item.body ???
         self.occupied = True
 
     def __repr__(self):
@@ -410,7 +412,6 @@ class Maze(Component):
             self.matrix, algorithm="BT")
         self.corners = get_corners(self.matrix)
         self.generate()
-        # self.map = self.draw_map()
 
     def generate(self):
         generate_maze(self)
@@ -428,7 +429,6 @@ class Maze(Component):
                                 merge_objects(selected_cell[section])
                 maze_string = maze_string + "\n"
         self.map = maze_string
-        # return maze_string
 
     def __repr__(self):
         self.draw_map()
@@ -443,7 +443,7 @@ def random_spawn(maze, itemtype="chest", name="chest", custombody=None):
 
 if __name__ == "__main__":
 # quick checks
-    test_maze = Maze(x=14, y=10, cellsize=3, indicator=1, name="test_maze")
+    test_maze = Maze(x=14, y=10, cellsize=3, indicator=1, name="test_maze", algorithm="sidewinder")
     test_maze = Maze(x=4, y=4, cellsize=8, indicator=1, name="test_maze")
     test_maze = Maze(
         x=4,
@@ -461,8 +461,16 @@ if __name__ == "__main__":
         name="test2")
 
     for i in range(10):
-        random_spawn(test_maze, itemtype="custom", custombody=i, name="number")
+        # random_spawn(test_maze, itemtype="chest", custombody=i, name="number")
+        random_spawn(test_maze, itemtype="chest", name="number")
 
+
+    while True:
+        repr(test_maze)
+        time.sleep(1/20)
+
+# get list of Items
+# call them to move
 
 
 
