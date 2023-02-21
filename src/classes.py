@@ -1,6 +1,8 @@
 import numpy.random as rand
 import _thread
 import time
+import json
+import turtle
 
 
 class Component:
@@ -412,6 +414,7 @@ class Maze(Component):
             self.matrix, algorithm="BT")
         self.corners = get_corners(self.matrix)
         self.generate()
+        self.draw_map()
 
     def generate(self):
         generate_maze(self)
@@ -433,6 +436,18 @@ class Maze(Component):
     def __repr__(self):
         self.draw_map()
         return self.map
+
+    def toJSON(self, filename="test_maze.json"):
+        # TODO: add more detailed string representation of the maze/graph!
+        # graph view
+        try:
+            with open(filename, 'w') as f:
+                json.dump(self.map, f)
+            return 'Maze saved.'
+        except BaseException as ex:
+            return ex
+
+
 
 def random_spawn(maze, itemtype="chest", name="chest", custombody=None):
     index = rand.randint(0, len(maze.cells))
@@ -465,9 +480,9 @@ if __name__ == "__main__":
         random_spawn(test_maze, itemtype="chest", name="number")
 
 
-    while True:
-        repr(test_maze)
-        time.sleep(1/20)
+    # while True:
+    #     repr(test_maze)
+    #     time.sleep(1/20)
 
 # get list of Items
 # call them to move
@@ -484,3 +499,6 @@ if __name__ == "__main__":
 # change cell size
 # add ite
 # framerate
+
+# maze + turtle + route finding + ML
+# tkinter UI for aniamted maze and animated routing!
