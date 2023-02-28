@@ -3,6 +3,8 @@ import _thread
 import time
 import json
 import turtle
+import sys
+import uuid
 
 
 class Component:
@@ -13,6 +15,14 @@ class Component:
 
     def __repr__(self):
         return self.body
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'body': self.body,
+            'indicator': self.indicator,
+            'type': self.__class__.__name__
+        }
 
 
 class Corner(Component):
@@ -245,6 +255,9 @@ class Cell(Component):
     def __getitem__(self, section):
         return getattr(self, section)
 
+    def to_dict(self):
+        return [component.to_dict() for component in self.components]
+
 
 def merge_objects(section):
     string = ""
@@ -437,12 +450,16 @@ class Maze(Component):
         self.draw_map()
         return self.map
 
+    def to_dict(self):
+        return [cell.to_dict() for cell in self.cells]
+
     def toJSON(self, filename="test_maze.json"):
         # TODO: add more detailed string representation of the maze/graph!
         # graph view
+        self.dict_representation = self.to_dict()
         try:
             with open(filename, 'w') as f:
-                json.dump(self.map, f)
+                json.dump(self.dict_representation, f)
             return 'Maze saved.'
         except BaseException as ex:
             return ex
@@ -480,9 +497,15 @@ if __name__ == "__main__":
         random_spawn(test_maze, itemtype="chest", name="number")
 
 
-    # while True:
-    #     repr(test_maze)
-    #     time.sleep(1/20)
+    test_maze = Maze(x=10, y=10, cellsize=3, indicator=1, name="test_maze", algorithm="sidewinder")
+    for j in range(100):
+            # random_spawn(test_maze, itemtype="chest", custombody=i, name="number")
+        random_spawn(test_maze, itemtype="chest", name="number")
+        sys.stdout.flush()
+        sys.stdout.write('\r' + str(test_maze))
+        sys.stdout.flush() # important
+
+        time.sleep(1/10)
 
 # get list of Items
 # call them to move
@@ -502,3 +525,5 @@ if __name__ == "__main__":
 
 # maze + turtle + route finding + ML
 # tkinter UI for aniamted maze and animated routing!
+# map drawing tool
+# 3D cam view
