@@ -17,12 +17,9 @@ class Component:
         return self.body
 
     def to_dict(self):
-        return {
-            'name': self.name,
-            'body': self.body,
-            'indicator': self.indicator,
-            'type': self.__class__.__name__
-        }
+        props = {t[0]:t[1] for (t) in self.__dict__.items()}
+        props.update({'type': self.__class__.__name__})
+        return props
 
 
 class Corner(Component):
@@ -44,6 +41,7 @@ class Wall(Component):
     def __init__(self, orientation, **kargs):
         Component.__init__(self, **kargs)
         self.orientation = orientation
+        self.open=False
 
         if orientation == "N":
             self.body = "═══"
@@ -165,11 +163,15 @@ def open_wall(orientation, cells):
             if orientation == "N":
 
                 getattr(cells[0], "S_wall"+middle).body = "╕ ╒"
+                getattr(cells[0], "S_wall"+middle).open = True
                 getattr(cells[1], "N_wall"+middle).body = "╛ ╘"
+                getattr(cells[1], "N_wall"+middle).open = True
 
             if orientation == "E":
                 getattr(cells[0], "E_wall"+middle).body = " "
+                getattr(cells[0], "E_wall"+middle).open = True
                 getattr(cells[1], "W_wall"+middle).body = " "
+                getattr(cells[1], "W_wall"+middle).open = True
 
         elif wall_length % 2 == 0:
             middle = [str(i) for i in get_middle_value(wall_length)]
@@ -177,15 +179,23 @@ def open_wall(orientation, cells):
             if orientation == "N":
 
                 getattr(cells[0], "S_wall"+middle[0]).body = "╕  "
+                getattr(cells[0], "S_wall"+middle[0]).open = True
                 getattr(cells[0], "S_wall"+middle[1]).body = "  ╒"
+                getattr(cells[0], "S_wall"+middle[1]).open = True
                 getattr(cells[1], "N_wall"+middle[0]).body = "╛  "
+                getattr(cells[1], "N_wall"+middle[0]).open = True
                 getattr(cells[1], "N_wall"+middle[1]).body = "  ╘"
+                getattr(cells[1], "N_wall"+middle[1]).open = True
 
             if orientation == "E":
                 getattr(cells[0], "E_wall"+middle[0]).body = " "
                 getattr(cells[0], "E_wall"+middle[1]).body = " "
                 getattr(cells[1], "W_wall"+middle[0]).body = " "
                 getattr(cells[1], "W_wall"+middle[1]).body = " "
+                getattr(cells[0], "E_wall"+middle[0]).open = True
+                getattr(cells[0], "E_wall"+middle[1]).open = True
+                getattr(cells[1], "W_wall"+middle[0]).open = True
+                getattr(cells[1], "W_wall"+middle[1]).open = True
 
     else:
         pass
@@ -387,7 +397,7 @@ class Item(Component):
         if itemtype == "chest":
             self.body = " ▥ "
         elif itemtype == "custom":
-            self.body = " " + str(custombody) +" "
+            self.body = " " + str(custombody) + " "
 
     def damage(self, damage):
         if self.condition > 0:
@@ -405,7 +415,6 @@ class Item(Component):
 
     def __repr__(self):
         return self.body
-
 
 
 class Maze(Component):
@@ -456,7 +465,11 @@ class Maze(Component):
     def toJSON(self, filename="test_maze.json"):
         # TODO: add more detailed string representation of the maze/graph!
         # graph view
-        self.dict_representation = self.to_dict()
+        self.dict_representation = {
+            'x': self.x,
+            'y': self.y,
+            'cells': self.to_dict()
+        }
         try:
             with open(filename, 'w') as f:
                 json.dump(self.dict_representation, f)
@@ -465,17 +478,27 @@ class Maze(Component):
             return ex
 
 
-
 def random_spawn(maze, itemtype="chest", name="chest", custombody=None):
     index = rand.randint(0, len(maze.cells))
     if maze.cells[index].occupied is not True:
-        maze.cells[index].place(Item=Item(name=name, indicator=0, itemtype=itemtype, custombody=custombody))
+        maze.cells[index].place(
+            Item=Item(
+                name=name,
+                indicator=0,
+                itemtype=itemtype,
+                custombody=custombody))
     return maze
 
 
 if __name__ == "__main__":
-# quick checks
-    test_maze = Maze(x=14, y=10, cellsize=3, indicator=1, name="test_maze", algorithm="sidewinder")
+    # quick checks
+    test_maze = Maze(
+        x=14,
+        y=10,
+        cellsize=3,
+        indicator=1,
+        name="test_maze",
+        algorithm="sidewinder")
     test_maze = Maze(x=4, y=4, cellsize=8, indicator=1, name="test_maze")
     test_maze = Maze(
         x=4,
@@ -496,25 +519,24 @@ if __name__ == "__main__":
         # random_spawn(test_maze, itemtype="chest", custombody=i, name="number")
         random_spawn(test_maze, itemtype="chest", name="number")
 
-
-    test_maze = Maze(x=10, y=10, cellsize=3, indicator=1, name="test_maze", algorithm="sidewinder")
+    test_maze = Maze(
+        x=10,
+        y=10,
+        cellsize=3,
+        indicator=1,
+        name="test_maze",
+        algorithm="sidewinder")
     for j in range(100):
-            # random_spawn(test_maze, itemtype="chest", custombody=i, name="number")
+        # random_spawn(test_maze, itemtype="chest", custombody=i, name="number")
         random_spawn(test_maze, itemtype="chest", name="number")
         sys.stdout.flush()
         sys.stdout.write('\r' + str(test_maze))
-        sys.stdout.flush() # important
+        sys.stdout.flush()  # important
 
         time.sleep(1/10)
 
 # get list of Items
 # call them to move
-
-
-
-
-
-
 
 
 # TODO
