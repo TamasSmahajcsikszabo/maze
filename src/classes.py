@@ -1,11 +1,17 @@
+from igraph import layout
 import numpy.random as rand
 import _thread
 import time
 import json
-import turtle
 import sys
 import uuid
+import os
+import copy
+import pathlib
+import igraph
+import cairo
 
+import matplotlib.pyplot as plt
 
 class Component:
     def __init__(self, indicator, name, body=""):
@@ -17,7 +23,7 @@ class Component:
         return self.body
 
     def to_dict(self):
-        props = {t[0]:t[1] for (t) in self.__dict__.items()}
+        props = {t[0]: t[1] for (t) in self.__dict__.items()}
         props.update({'type': self.__class__.__name__})
         return props
 
@@ -41,7 +47,7 @@ class Wall(Component):
     def __init__(self, orientation, **kargs):
         Component.__init__(self, **kargs)
         self.orientation = orientation
-        self.open=False
+        self.open = False
 
         if orientation == "N":
             self.body = "═══"
@@ -196,6 +202,8 @@ def open_wall(orientation, cells):
                 getattr(cells[0], "E_wall"+middle[1]).open = True
                 getattr(cells[1], "W_wall"+middle[0]).open = True
                 getattr(cells[1], "W_wall"+middle[1]).open = True
+        getattr(cells[1], "open_to").append(cells[0].id)
+        getattr(cells[0], "open_to").append(cells[1].id)
 
     else:
         pass
@@ -205,11 +213,13 @@ class Cell(Component):
     def __init__(self, size=3, **kargs):
         Component.__init__(self, **kargs)
         components = get_base_components(size=size)
+        self.id = uuid.uuid4()
         self.size = size
         self.components = []
         self.matrix = get_matrix(x=size, y=size)
         self.wall_length = self.size - 2
         self.occupied = False
+        self.open_to = []
         for component in components:
             if isinstance(component, list):
                 for i in range(len(component)):
@@ -266,7 +276,9 @@ class Cell(Component):
         return getattr(self, section)
 
     def to_dict(self):
-        return [component.to_dict() for component in self.components]
+        components = [component.to_dict() for component in self.components]
+        sorted_components = sorted(components, key=lambda d: d['indicator'])
+        return sorted_components
 
 
 def merge_objects(section):
@@ -289,6 +301,13 @@ def collapse_to_list(tupl):
     result = []
     [result.extend(i) for i in tupl]
     return result
+
+
+def save_snapshot(selfObject, filename):
+    selfObject.draw_map()
+    with open(filename, 'w') as f:
+        f.write(selfObject.map)
+        f.close()
 
 
 def generate_maze(selfObject):
@@ -345,6 +364,11 @@ def generate_maze(selfObject):
             for c in range(selfObject.x):
                 selected_indicator = selfObject.matrix[row][c]
                 for cell in selfObject.cells:
+                    filename = os.path.join('generated', 'sidewinder{}-{}-cell-{}.txt'.format(
+                        row, c, cell.indicator))
+                    # selfSnapShot = copy.copy(selfObject)
+                    # save_snapshot(selfSnapShot, filename)
+                    # print(selfObject)
                     if cell.indicator == selected_indicator:
                         if cell.indicator in find_boundaries(selfObject.matrix, combined=False)[
                                                              2] or cell.indicator == selfObject.corners[3]:
@@ -417,6 +441,26 @@ class Item(Component):
         return self.body
 
 
+def make_graph(maze):
+    g = igraph.Graph()
+    nodes = [i['cell'] for i in maze.adjacency_list]
+    g.add_vertices(len(nodes))
+    g.vs['id'] = nodes
+    edges = []
+    for i in maze.adjacency_list:
+        self_index = [node for node in g.vs if node['id'] == i['cell']][0]
+        neighbors = i['neighbors']
+        if len(neighbors) > 0:
+            for n in neighbors:
+                neighbor_index = [node for node in g.vs if node['id'] == n][0]
+                edge = (self_index.index, neighbor_index.index)
+                if (neighbor_index.index, self_index.index) not in edges:
+                    edges.append(edge)
+    edges = list(set(edges))
+    g.add_edges(edges)
+    return g
+
+
 class Maze(Component):
     def __init__(self, x, y, cellsize=4, algorithm="BT",  **kargs):
         Component.__init__(self, **kargs)
@@ -437,9 +481,18 @@ class Maze(Component):
         self.corners = get_corners(self.matrix)
         self.generate()
         self.draw_map()
+        self.adjacency_list = [{'cell': c.id, 'neighbors': c.open_to} for c in self.cells]
+        self.graph = None
 
     def generate(self):
         generate_maze(self)
+
+    def get_graph(self):
+        self.graph = make_graph(self)
+        return self.graph
+
+    def get_adjacency_list(self):
+        return self.adjacency_list
 
     def draw_map(self):
         maze_string = ""
@@ -461,6 +514,20 @@ class Maze(Component):
 
     def to_dict(self):
         return [cell.to_dict() for cell in self.cells]
+
+    def __copy__(self):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        result.__dict__.update(self.__dict__)
+        return result
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        return result
 
     def toJSON(self, filename="test_maze.json"):
         # TODO: add more detailed string representation of the maze/graph!
@@ -491,6 +558,7 @@ def random_spawn(maze, itemtype="chest", name="chest", custombody=None):
 
 
 if __name__ == "__main__":
+    root = pathlib.Path(__file__).parent.resolve()
     # quick checks
     test_maze = Maze(
         x=14,
@@ -499,41 +567,46 @@ if __name__ == "__main__":
         indicator=1,
         name="test_maze",
         algorithm="sidewinder")
-    test_maze = Maze(x=4, y=4, cellsize=8, indicator=1, name="test_maze")
-    test_maze = Maze(
-        x=4,
-        y=4,
-        cellsize=8,
-        indicator=1,
-        name="test_maze",
-        algorithm="sidewinder")
-    test_maze2 = Maze(
-        x=10,
-        y=10,
-        cellsize=3,
-        algorithm="sidewinder",
-        indicator=2,
-        name="test2")
+    test_maze.toJSON(os.path.join(root, '..', 'generated', 'maze.json'))
+    # test_maze = Maze(x=4, y=4, cellsize=8, indicator=1, name="test_maze")
+    # test_maze = Maze(
+    #     x=4,
+    #     y=4,
+    #     cellsize=8,
+    #     indicator=1,
+    #     name="test_maze",
+    #     algorithm="sidewinder")
+    # test_maze2 = Maze(
+    #     x=10,
+    #     y=10,
+    #     cellsize=3,
+    #     algorithm="sidewinder",
+    #     indicator=2,
+    #     name="test2")
 
     for i in range(10):
         # random_spawn(test_maze, itemtype="chest", custombody=i, name="number")
         random_spawn(test_maze, itemtype="chest", name="number")
+    print(test_maze)
+    graph = test_maze.get_graph()
+    layout = graph.layout('kk')
+    igraph.plot(graph, "graph.pdf", layout=layout)
 
-    test_maze = Maze(
-        x=10,
-        y=10,
-        cellsize=3,
-        indicator=1,
-        name="test_maze",
-        algorithm="sidewinder")
-    for j in range(100):
-        # random_spawn(test_maze, itemtype="chest", custombody=i, name="number")
-        random_spawn(test_maze, itemtype="chest", name="number")
-        sys.stdout.flush()
-        sys.stdout.write('\r' + str(test_maze))
-        sys.stdout.flush()  # important
+    # test_maze = Maze(
+    #     x=10,
+    #     y=10,
+    #     cellsize=3,
+    #     indicator=1,
+    #     name="test_maze",
+    #     algorithm="sidewinder")
+    # for j in range(100):
+    #     # random_spawn(test_maze, itemtype="chest", custombody=i, name="number")
+    #     random_spawn(test_maze, itemtype="chest", name="number")
+    #     sys.stdout.flush()
+    #     sys.stdout.write('\r' + str(test_maze))
+    #     sys.stdout.flush()  # important
 
-        time.sleep(1/10)
+    #     time.sleep(1/10)
 
 # get list of Items
 # call them to move
